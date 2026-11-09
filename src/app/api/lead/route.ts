@@ -79,7 +79,40 @@ export async function POST(req: NextRequest) {
       ipAddress: ip,
     };
 
-    // 4. (a) If process.env.DJANGO_LEAD_ENDPOINT is configured, forward to Django
+    // 4. (a) If process.env.RESEND_API_KEY is configured, send email notification (100% free)
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.CONTACT_EMAIL || "mominrifat8@gmail.com";
+
+    if (resendApiKey) {
+      try {
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${resendApiKey}`,
+          },
+          body: JSON.stringify({
+            from: "Aethrix Nexus Nova <onboarding@resend.dev>",
+            to: adminEmail,
+            subject: `[New Lead] Project Inquiry from ${name} (${company})`,
+            html: `
+              <h2>New Project Consultation Lead</h2>
+              <p><strong>Name:</strong> ${name}</p>
+              <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Company:</strong> ${company}</p>
+              <p><strong>Budget:</strong> ${budget || "Not specified"}</p>
+              <p><strong>Scope:</strong></p>
+              <p>${scope}</p>
+              <p><em>Received at: ${leadPayload.timestamp} from IP: ${ip}</em></p>
+            `,
+          }),
+        });
+      } catch {
+        // Fallback continues
+      }
+    }
+
+    // 4. (b) If process.env.DJANGO_LEAD_ENDPOINT is configured, forward to Django
     const djangoEndpoint = process.env.DJANGO_LEAD_ENDPOINT;
     const djangoToken = process.env.DJANGO_LEAD_TOKEN;
 
@@ -102,7 +135,7 @@ export async function POST(req: NextRequest) {
         await appendLocalLead(leadPayload);
       }
     } else {
-      // 4. (b) In development without Django, append safely to leads.ndjson
+      // 4. (c) In development or standalone, append safely to leads.ndjson
       await appendLocalLead(leadPayload);
     }
 
@@ -120,7 +153,10 @@ export async function POST(req: NextRequest) {
 
 async function appendLocalLead(data: Record<string, unknown>) {
   try {
-    const filePath = path.join(process.cwd(), "leads.ndjson");
+    const isVercel = Boolean(process.env.VERCEL);
+    const filePath = isVercel
+      ? path.join("/tmp", "leads.ndjson")
+      : path.join(process.cwd(), "leads.ndjson");
     const line = JSON.stringify(data) + "\n";
     await fs.appendFile(filePath, line, "utf8");
   } catch {
