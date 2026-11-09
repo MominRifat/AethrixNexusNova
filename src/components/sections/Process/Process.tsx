@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
-import { CheckCircle2, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, useScroll, useMotionValueEvent } from "framer-motion";
+import { CheckCircle2, ArrowRight } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
@@ -118,19 +118,14 @@ const PHASES: ProcessPhase[] = [
 export function Process() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeStep, setActiveStep] = useState(0);
-  const [activeMobileStep, setActiveMobileStep] = useState(0);
 
-  // Touch tracking for mobile swipe navigation
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
-
-  // Desktop Framer Motion useScroll tracks container progress (0 -> 1)
+  // Framer Motion useScroll tracks container progress (0 -> 1) across both Desktop and Mobile
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
 
-  // Native scroll progress event listener for desktop
+  // Native scroll progress event listener for step progression
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
     // Distribute phases across 0 to 0.85 so Phase 4 stays locked on screen before container unpins
     const effectiveProgress = Math.min(Math.max(latest / 0.85, 0), 1);
@@ -157,38 +152,7 @@ export function Process() {
     }
   };
 
-  const setMobileStep = (index: number) => {
-    const clamped = Math.max(0, Math.min(PHASES.length - 1, index));
-    setActiveMobileStep(clamped);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null || touchStartY.current === null) return;
-    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-
-    // Detect horizontal swipe if deltaX is significantly larger than vertical delta
-    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
-      if (deltaX < 0) {
-        // Swiped left -> next step
-        setMobileStep(activeMobileStep + 1);
-      } else {
-        // Swiped right -> prev step
-        setMobileStep(activeMobileStep - 1);
-      }
-    }
-
-    touchStartX.current = null;
-    touchStartY.current = null;
-  };
-
   const activePhase = PHASES[activeStep];
-  const activeMobilePhase = PHASES[activeMobileStep];
 
   return (
     <Section
@@ -200,13 +164,14 @@ export function Process() {
       withTopDivider
       className="relative"
     >
-      {/* 1. DESKTOP STICKY-SCROLL WORKFLOW (Native scrolling, no scroll-jacking, zero cutoff) */}
+      {/* UNIFIED STICKY-SCROLL WORKFLOW (Exact same scroll-driven sticky behavior on PC & Mobile) */}
       <div
         ref={containerRef}
-        className="hidden md:block relative h-[200vh] -mt-4"
+        className="relative h-[220vh] -mt-4"
       >
-        <div className="sticky top-20 lg:top-24 w-full pt-2">
-          <div className="w-full grid grid-cols-12 gap-8 lg:gap-12 items-start">
+        <div className="sticky top-16 md:top-20 lg:top-24 w-full pt-2">
+          {/* 1. DESKTOP 2-COLUMN VIEW (md and up) */}
+          <div className="hidden md:grid grid-cols-12 gap-8 lg:gap-12 items-start">
             {/* Left Column: Vertical Timeline & Phase Navigation */}
             <div className="col-span-5 flex flex-col justify-start pt-1">
               <div className="mb-4">
@@ -306,233 +271,199 @@ export function Process() {
               </div>
             </div>
 
-            {/* Right Column: Dynamic Content Panel & SVG Mini-Visual */}
-            <div className="col-span-7">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activePhase.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.22, ease: "easeOut" }}
-                  className="rounded-2xl lg:rounded-3xl bg-gradient-to-b from-[#1e1810] to-[#17120a] border border-white/[0.09] p-5 lg:p-6 shadow-2xl relative overflow-hidden"
-                >
-                  {/* Subtle Top-Right Ambient Glow */}
+            {/* Right Column: Zero-Layout-Shift Crossfade Card Stack */}
+            <div className="col-span-7 relative min-h-[420px]">
+              {PHASES.map((phase, idx) => {
+                const isActive = activeStep === idx;
+                return (
                   <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-[#ffd426]/10 blur-3xl"
-                  />
-
-                  {/* Phase Full Title */}
-                  <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-white/[0.08]">
-                    <h3 className="font-heading text-base lg:text-lg font-bold tracking-tight text-[#f5f3ee]">
-                      {activePhase.fullTitle}
-                    </h3>
-                    <span className="font-mono text-[11px] text-[#ffd426] px-2 py-0.5 rounded bg-[#ffd426]/10 border border-[#ffd426]/20 shrink-0">
-                      PHASE {activePhase.stepNumber} OF 04
-                    </span>
-                  </div>
-
-                  <p className="mt-2 text-xs sm:text-[13px] text-[#b7ae9c] leading-relaxed">
-                    {activePhase.subtitle}
-                  </p>
-
-                  {/* SVG / CSS Mini-Visual */}
-                  <div className="mt-3">
-                    {activePhase.visual}
-                  </div>
-
-                  {/* 3 Bullet Deliverables */}
-                  <div className="mt-3 pt-2.5 border-t border-white/[0.08] space-y-1.5">
-                    <span className="font-mono text-[10.5px] uppercase tracking-wider text-[#ffd426] font-semibold block">
-                      Target Deliverables &amp; Artefacts
-                    </span>
-                    {activePhase.deliverables.map((item, idx) => (
-                      <div key={idx} className="flex items-start gap-2.5">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-[#ffd426] shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="text-xs sm:text-[13px] font-semibold text-[#f5f3ee]">
-                            {item.name}
-                          </h4>
-                          <p className="text-[11px] text-[#b7ae9c] leading-snug mt-0.5">
-                            {item.description}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. MOBILE INTERACTIVE SLIDING WORKFLOW (< md) */}
-      {/* Zero scroll-jacking, zero layout jitter, full touch swipe & interactive node controls */}
-      <div className="block md:hidden relative mt-4">
-        {/* Top Phase Stepper Node Bar */}
-        <div className="w-full mb-3 px-1">
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-mono text-xs text-[#ffd426] font-bold tracking-wider uppercase">
-              Phase {activeMobilePhase.stepNumber} &bull; Protocol
-            </span>
-            <span className="font-mono text-[11px] text-[#7d7566]">
-              {activeMobileStep + 1} of {PHASES.length}
-            </span>
-          </div>
-
-          {/* 4 Connected Nodes with Animated Fill Bar */}
-          <div className="relative flex items-center justify-between">
-            {/* Background line */}
-            <div className="absolute left-3 right-3 top-1/2 -translate-y-1/2 h-[2px] bg-white/[0.08]" />
-
-            {/* Animated Progress line */}
-            <div
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-[2px] bg-gradient-to-r from-[#ffd426] to-[#ff9f1c] transition-all duration-300 ease-out"
-              style={{
-                width: `calc(${((activeMobileStep) / (PHASES.length - 1)) * 100}% - 8px)`,
-              }}
-            />
-
-            {PHASES.map((phase, idx) => {
-              const isActive = activeMobileStep === idx;
-              const isPassed = activeMobileStep > idx;
-              return (
-                <button
-                  key={phase.id}
-                  type="button"
-                  onClick={() => setMobileStep(idx)}
-                  className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full bg-[#120e08] border transition-all duration-300 cursor-pointer"
-                  style={{
-                    borderColor: isActive ? "#ffd426" : isPassed ? "rgba(255,212,38,0.6)" : "rgba(255,255,255,0.15)",
-                    boxShadow: isActive ? "0 0 10px rgba(255,212,38,0.5)" : "none",
-                  }}
-                >
-                  <span
+                    key={phase.id}
+                    aria-hidden={!isActive}
                     className={cn(
-                      "font-mono text-xs font-bold transition-colors",
-                      isActive ? "text-[#ffd426]" : isPassed ? "text-[#ffd426]/70" : "text-[#7d7566]"
+                      "w-full transition-all duration-300 ease-out",
+                      isActive
+                        ? "relative z-10 opacity-100 translate-y-0"
+                        : "absolute inset-0 z-0 opacity-0 pointer-events-none translate-y-3"
                     )}
                   >
-                    {phase.stepNumber}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+                    <div className="rounded-2xl lg:rounded-3xl bg-gradient-to-b from-[#1e1810] to-[#17120a] border border-white/[0.09] p-5 lg:p-6 shadow-2xl relative overflow-hidden">
+                      {/* Subtle Top-Right Ambient Glow */}
+                      <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-[#ffd426]/10 blur-3xl"
+                      />
 
-        {/* Swipeable Phase Card */}
-        <div
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          className="relative w-full touch-pan-y"
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeMobilePhase.id}
-              initial={{ opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -12 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="rounded-2xl bg-gradient-to-b from-[#1e1810] to-[#17120a] border border-white/[0.09] p-4 sm:p-5 shadow-2xl relative overflow-hidden min-h-[460px] flex flex-col justify-between"
-            >
-              {/* Subtle Ambient Glow */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute -top-12 -right-12 h-36 w-36 rounded-full bg-[#ffd426]/10 blur-2xl"
-              />
+                      {/* Phase Full Title */}
+                      <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-white/[0.08]">
+                        <h3 className="font-heading text-base lg:text-lg font-bold tracking-tight text-[#f5f3ee]">
+                          {phase.fullTitle}
+                        </h3>
+                        <span className="font-mono text-[11px] text-[#ffd426] px-2 py-0.5 rounded bg-[#ffd426]/10 border border-[#ffd426]/20 shrink-0">
+                          PHASE {phase.stepNumber} OF 04
+                        </span>
+                      </div>
 
-              <div>
-                {/* Phase Full Title */}
-                <div className="flex items-center justify-between gap-2 pb-2 border-b border-white/[0.08]">
-                  <h3 className="font-heading text-sm sm:text-base font-bold tracking-tight text-[#f5f3ee]">
-                    {activeMobilePhase.fullTitle}
-                  </h3>
-                  <span className="font-mono text-[10px] text-[#ffd426] px-2 py-0.5 rounded bg-[#ffd426]/10 border border-[#ffd426]/20 shrink-0">
-                    PHASE {activeMobilePhase.stepNumber}
-                  </span>
-                </div>
+                      <p className="mt-2 text-xs sm:text-[13px] text-[#b7ae9c] leading-relaxed">
+                        {phase.subtitle}
+                      </p>
 
-                <p className="mt-1.5 text-xs text-[#b7ae9c] leading-relaxed">
-                  {activeMobilePhase.subtitle}
-                </p>
+                      {/* SVG / CSS Mini-Visual */}
+                      <div className="mt-3">
+                        {phase.visual}
+                      </div>
 
-                {/* SVG Mini-Visual */}
-                <div className="mt-2.5">
-                  {activeMobilePhase.visual}
-                </div>
-
-                {/* Target Deliverables */}
-                <div className="mt-2.5 pt-2 border-t border-white/[0.08] space-y-1.5">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#ffd426] font-semibold block">
-                    Target Deliverables
-                  </span>
-                  {activeMobilePhase.deliverables.map((item, idx) => (
-                    <div key={idx} className="flex items-start gap-2">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-[#ffd426] shrink-0 mt-0.5" />
-                      <div className="min-w-0">
-                        <h4 className="text-xs font-semibold text-[#f5f3ee]">
-                          {item.name}
-                        </h4>
-                        <p className="text-[10.5px] text-[#b7ae9c] leading-tight line-clamp-2 mt-0.5">
-                          {item.description}
-                        </p>
+                      {/* 3 Bullet Deliverables */}
+                      <div className="mt-3 pt-2.5 border-t border-white/[0.08] space-y-1.5">
+                        <span className="font-mono text-[10.5px] uppercase tracking-wider text-[#ffd426] font-semibold block">
+                          Target Deliverables &amp; Artefacts
+                        </span>
+                        {phase.deliverables.map((item, dIdx) => (
+                          <div key={dIdx} className="flex items-start gap-2.5">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-[#ffd426] shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="text-xs sm:text-[13px] font-semibold text-[#f5f3ee]">
+                                {item.name}
+                              </h4>
+                              <p className="text-[11px] text-[#b7ae9c] leading-snug mt-0.5">
+                                {item.description}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Mobile Slide Navigation Controls & Swipe Indicator */}
-        <div className="flex items-center justify-between mt-3 px-1">
-          <button
-            type="button"
-            onClick={() => setMobileStep(activeMobileStep - 1)}
-            disabled={activeMobileStep === 0}
-            aria-label="Previous Phase"
-            className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-[#b7ae9c] disabled:opacity-25 disabled:pointer-events-none hover:text-white transition-colors cursor-pointer"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          {/* Dots Indicator */}
-          <div className="flex items-center gap-2">
-            {PHASES.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setMobileStep(idx)}
-                aria-label={`Go to phase ${idx + 1}`}
-                className={cn(
-                  "h-1.5 rounded-full transition-all duration-300",
-                  activeMobileStep === idx
-                    ? "w-6 bg-[#ffd426]"
-                    : "w-2 bg-white/20 hover:bg-white/40"
-                )}
-              />
-            ))}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setMobileStep(activeMobileStep + 1)}
-            disabled={activeMobileStep === PHASES.length - 1}
-            aria-label="Next Phase"
-            className="p-2 rounded-xl bg-[#ffd426]/10 border border-[#ffd426]/30 text-[#ffd426] disabled:opacity-25 disabled:pointer-events-none hover:bg-[#ffd426] hover:text-[#0a0805] transition-colors cursor-pointer"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+          {/* 2. MOBILE SCROLL-DRIVEN VIEW (< md) - EXACT SAME STICKY SCROLL BEHAVIOR */}
+          <div className="block md:hidden max-w-lg mx-auto">
+            {/* Top Phase Header & Interactive Stepper */}
+            <div className="mb-2.5 px-0.5">
+              <div className="flex items-center justify-between mb-2">
+                <Badge withDot className="bg-[#ffd426]/10 text-[#ffd426] border-[#ffd426]/30 text-[10.5px] py-0.5">
+                  Protocol // Phase {activePhase.stepNumber}
+                </Badge>
+                <span className="font-mono text-[11px] text-[#ffd426] font-bold">
+                  {activeStep + 1} / 04
+                </span>
+              </div>
 
-        <div className="text-center mt-2">
-          <span className="font-mono text-[10.5px] text-[#7d7566]">
-            Swipe left/right or tap 01&ndash;04 to switch phases
-          </span>
+              {/* 4 Connected Nodes with Animated Fill Bar */}
+              <div className="relative flex items-center justify-between px-1">
+                {/* Base line */}
+                <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-[2px] bg-white/[0.08]" />
+
+                {/* Animated Progress fill line */}
+                <div
+                  className="absolute left-4 top-1/2 -translate-y-1/2 h-[2px] bg-gradient-to-r from-[#ffd426] to-[#ff9f1c] transition-all duration-300 ease-out"
+                  style={{
+                    width: `calc(${((activeStep) / (PHASES.length - 1)) * 100}% - 16px)`,
+                  }}
+                />
+
+                {PHASES.map((phase, idx) => {
+                  const isActive = activeStep === idx;
+                  const isPassed = activeStep > idx;
+                  return (
+                    <button
+                      key={phase.id}
+                      type="button"
+                      onClick={() => handleStepClick(idx)}
+                      className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full bg-[#120e08] border transition-all duration-300 cursor-pointer"
+                      style={{
+                        borderColor: isActive ? "#ffd426" : isPassed ? "rgba(255,212,38,0.6)" : "rgba(255,255,255,0.15)",
+                        boxShadow: isActive ? "0 0 10px rgba(255,212,38,0.5)" : "none",
+                      }}
+                    >
+                      <span
+                        className={cn(
+                          "font-mono text-xs font-bold transition-colors",
+                          isActive ? "text-[#ffd426]" : isPassed ? "text-[#ffd426]/70" : "text-[#7d7566]"
+                        )}
+                      >
+                        {phase.stepNumber}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Mobile Zero-Layout-Shift Crossfade Card Stack */}
+            <div className="relative min-h-[440px] w-full">
+              {PHASES.map((phase, idx) => {
+                const isActive = activeStep === idx;
+                return (
+                  <div
+                    key={phase.id}
+                    aria-hidden={!isActive}
+                    className={cn(
+                      "w-full transition-all duration-300 ease-out",
+                      isActive
+                        ? "relative z-10 opacity-100 translate-y-0"
+                        : "absolute inset-0 z-0 opacity-0 pointer-events-none translate-y-3"
+                    )}
+                  >
+                    <div className="rounded-2xl bg-gradient-to-b from-[#1e1810] to-[#17120a] border border-white/[0.09] p-4 sm:p-5 shadow-2xl relative overflow-hidden">
+                      {/* Subtle Ambient Glow */}
+                      <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute -top-12 -right-12 h-36 w-36 rounded-full bg-[#ffd426]/10 blur-2xl"
+                      />
+
+                      {/* Phase Full Title */}
+                      <div className="flex items-center justify-between gap-2 pb-2 border-b border-white/[0.08]">
+                        <h3 className="font-heading text-sm sm:text-base font-bold tracking-tight text-[#f5f3ee]">
+                          {phase.fullTitle}
+                        </h3>
+                        <span className="font-mono text-[10px] text-[#ffd426] px-2 py-0.5 rounded bg-[#ffd426]/10 border border-[#ffd426]/20 shrink-0">
+                          PHASE {phase.stepNumber}
+                        </span>
+                      </div>
+
+                      <p className="mt-1.5 text-xs text-[#b7ae9c] leading-relaxed">
+                        {phase.subtitle}
+                      </p>
+
+                      {/* SVG Mini-Visual */}
+                      <div className="mt-2.5">
+                        {phase.visual}
+                      </div>
+
+                      {/* Target Deliverables */}
+                      <div className="mt-2.5 pt-2 border-t border-white/[0.08] space-y-1.5">
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-[#ffd426] font-semibold block">
+                          Target Deliverables
+                        </span>
+                        {phase.deliverables.map((item, dIdx) => (
+                          <div key={dIdx} className="flex items-start gap-2">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-[#ffd426] shrink-0 mt-0.5" />
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-semibold text-[#f5f3ee]">
+                                {item.name}
+                              </h4>
+                              <p className="text-[10.5px] text-[#b7ae9c] leading-tight line-clamp-2 mt-0.5">
+                                {item.description}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Mobile Scroll Down Indicator */}
+            <div className="flex items-center justify-center gap-1.5 mt-2.5 text-[11px] font-mono text-[#7d7566]">
+              <ArrowRight className="h-3 w-3 text-[#ffd426] rotate-90 animate-bounce" />
+              <span>Scroll down to advance phase ({activeStep + 1}/4)</span>
+            </div>
+          </div>
         </div>
       </div>
     </Section>
