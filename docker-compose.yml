@@ -1,0 +1,18 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aethrix_nexus_web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - DJANGO_LEAD_ENDPOINT=${DJANGO_LEAD_ENDPOINT:-}
+      - DJANGO_LEAD_TOKEN=${DJANGO_LEAD_TOKEN:-}
+    env_file:
+      - path: .env
+        required: false
