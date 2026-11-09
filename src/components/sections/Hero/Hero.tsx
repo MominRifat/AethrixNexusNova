@@ -166,13 +166,13 @@ export function Hero() {
             {/* Action Buttons */}
             <motion.div
               variants={itemVariants}
-              className="flex flex-wrap items-center gap-3.5 pt-1 w-full sm:w-auto"
+              className="flex flex-col sm:flex-row sm:items-center gap-3.5 pt-1 w-full sm:w-auto"
             >
               <MagneticButton
                 variant="primary"
                 size="lg"
                 href="#estimator"
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto justify-center text-center"
               >
                 Launch Project Discovery
               </MagneticButton>
@@ -181,7 +181,7 @@ export function Hero() {
                 variant="ghost"
                 size="lg"
                 href="#lab"
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto justify-center text-center"
               >
                 Explore Interactive Lab
               </Button>

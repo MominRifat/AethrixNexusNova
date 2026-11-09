@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 const PALETTE = [
   { name: "bg-0", hex: "#0a0805", role: "Primary Background" },
@@ -300,6 +301,54 @@ export default function DesignSystemPage() {
                 Interior content container with strict 1240px max width and responsive padding.
               </p>
             </Section>
+          </div>
+        </section>
+
+        {/* 8. Obsidian Amber Circular Reactor / Loading Spinner */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-heading text-2xl font-bold text-[#f5f3ee]">
+                8. Circular Loading Reactor (Obsidian Amber)
+              </h2>
+              <p className="text-sm text-[#b7ae9c] mt-1">
+                Concentric multi-tiered SVG radar orbit with gradient sweep, orbiting satellite node, counter-rotating reticle, and pulsing geometric quantum core.
+              </p>
+            </div>
+            <Badge withDot>Hardware-Accelerated</Badge>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* XS & SM */}
+            <div className="p-6 rounded-[20px] bg-[#120e08] border border-white/[0.08] flex flex-col items-center justify-center gap-4">
+              <span className="font-mono text-xs text-[#7d7566]">XS (18px) &amp; SM (28px)</span>
+              <div className="flex items-center gap-6">
+                <LoadingSpinner size="xs" />
+                <LoadingSpinner size="sm" />
+              </div>
+              <span className="text-[11px] font-mono text-[#b7ae9c]">Buttons &amp; Badges</span>
+            </div>
+
+            {/* MD */}
+            <div className="p-6 rounded-[20px] bg-[#120e08] border border-white/[0.08] flex flex-col items-center justify-center gap-4">
+              <span className="font-mono text-xs text-[#7d7566]">MD (48px)</span>
+              <LoadingSpinner size="md" label="Processing" />
+              <span className="text-[11px] font-mono text-[#b7ae9c]">Cards &amp; Forms</span>
+            </div>
+
+            {/* LG */}
+            <div className="p-6 rounded-[20px] bg-[#120e08] border border-white/[0.08] flex flex-col items-center justify-center gap-4">
+              <span className="font-mono text-xs text-[#7d7566]">LG (72px)</span>
+              <LoadingSpinner size="lg" label="Telemetry Sync" sublabel="Node // 120 FPS" />
+              <span className="text-[11px] font-mono text-[#b7ae9c]">Modals &amp; Views</span>
+            </div>
+
+            {/* XL */}
+            <div className="p-6 rounded-[20px] bg-[#120e08] border border-white/[0.08] flex flex-col items-center justify-center gap-4">
+              <span className="font-mono text-xs text-[#7d7566]">XL (104px)</span>
+              <LoadingSpinner size="xl" label="Architecture Core" sublabel="Matrix Online" />
+              <span className="text-[11px] font-mono text-[#b7ae9c]">Route &amp; Suspense Transit</span>
+            </div>
           </div>
         </section>
       </div>

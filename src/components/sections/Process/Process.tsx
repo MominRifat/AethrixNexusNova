@@ -117,20 +117,35 @@ const PHASES: ProcessPhase[] = [
 
 export function Process() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const mobileContainerRef = useRef<HTMLDivElement>(null);
   const [activeStep, setActiveStep] = useState(0);
+  const [activeMobileStep, setActiveMobileStep] = useState(0);
 
-  // Framer Motion useScroll tracks container progress (0 -> 1)
+  // Desktop Framer Motion useScroll tracks container progress (0 -> 1)
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
 
-  // Native scroll progress event listener (no cascading renders)
+  // Mobile Framer Motion useScroll tracks mobile container progress (0 -> 1)
+  const { scrollYProgress: mobileScrollYProgress } = useScroll({
+    target: mobileContainerRef,
+    offset: ["start start", "end end"],
+  });
+
+  // Native scroll progress event listener for desktop
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    // Map 0 -> 1 to steps 0, 1, 2, 3
     const step = Math.min(Math.floor(latest * PHASES.length), PHASES.length - 1);
     if (step !== activeStep) {
       setActiveStep(step);
+    }
+  });
+
+  // Native scroll progress event listener for mobile
+  useMotionValueEvent(mobileScrollYProgress, "change", (latest) => {
+    const step = Math.min(Math.floor(latest * PHASES.length), PHASES.length - 1);
+    if (step !== activeMobileStep) {
+      setActiveMobileStep(step);
     }
   });
 
@@ -140,13 +155,34 @@ export function Process() {
     const scrollY = window.scrollY;
     const targetY = scrollY + top + (height / PHASES.length) * index;
 
-    window.scrollTo({
-      top: targetY,
-      behavior: "smooth",
-    });
+    if (typeof window !== "undefined" && window.__lenisInstance) {
+      window.__lenisInstance.scrollTo(targetY, { duration: 0.8 });
+    } else {
+      window.scrollTo({
+        top: targetY,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const handleMobileStepClick = (index: number) => {
+    if (!mobileContainerRef.current) return;
+    const { top, height } = mobileContainerRef.current.getBoundingClientRect();
+    const scrollY = window.scrollY;
+    const targetY = scrollY + top + (height / PHASES.length) * index + 10;
+
+    if (typeof window !== "undefined" && window.__lenisInstance) {
+      window.__lenisInstance.scrollTo(targetY, { duration: 0.8 });
+    } else {
+      window.scrollTo({
+        top: targetY,
+        behavior: "smooth",
+      });
+    }
   };
 
   const activePhase = PHASES[activeStep];
+  const activeMobilePhase = PHASES[activeMobileStep];
 
   return (
     <Section
@@ -158,7 +194,7 @@ export function Process() {
       withTopDivider
       className="relative"
     >
-      {/* DESKTOP STICKY-SCROLL WORKFLOW (Native scrolling, no scroll-jacking) */}
+      {/* 1. DESKTOP STICKY-SCROLL WORKFLOW (Native scrolling, no scroll-jacking) */}
       <div
         ref={containerRef}
         className="hidden md:block relative h-[280vh] -mt-6"
@@ -200,7 +236,7 @@ export function Process() {
                       key={phase.id}
                       onClick={() => handleStepClick(idx)}
                       className={cn(
-                        "group relative flex items-start gap-4 text-left transition-all duration-300 w-full focus:outline-none",
+                        "group relative flex items-start gap-4 text-left transition-all duration-300 w-full focus:outline-none cursor-pointer",
                         isActive ? "scale-[1.02]" : "opacity-60 hover:opacity-90"
                       )}
                     >
@@ -325,57 +361,127 @@ export function Process() {
         </div>
       </div>
 
-      {/* MOBILE VERTICAL STACK (Simple, native vertical stack with vertical line) */}
-      <div className="block md:hidden relative pl-6 space-y-8 mt-6">
-        {/* Continuous Mobile Timeline Line */}
-        <div
-          aria-hidden="true"
-          className="absolute left-2.5 top-2 bottom-2 w-[2px] bg-gradient-to-b from-[#ffd426] via-[#ff9f1c] to-white/10"
-        />
-
-        {PHASES.map((phase) => (
-          <div key={phase.id} className="relative">
-            {/* Step Marker Dot */}
-            <div className="absolute -left-6 top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-[#ffd426] bg-[#120e08] shadow-[0_0_8px_rgba(255,212,38,0.4)]">
-              <span className="h-2 w-2 rounded-full bg-[#ffd426]" />
+      {/* 2. MOBILE INTERACTIVE STICKY-SCROLL WORKFLOW (< md) */}
+      <div
+        ref={mobileContainerRef}
+        className="block md:hidden relative h-[240vh] mt-2"
+      >
+        <div className="sticky top-20 min-h-[calc(100dvh-88px)] flex flex-col justify-center max-w-md mx-auto">
+          {/* Top Phase Stepper Node Bar */}
+          <div className="w-full mb-3 px-1">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-mono text-xs text-[#ffd426] font-bold tracking-wider uppercase">
+                Phase {activeMobilePhase.stepNumber} &bull; Protocol
+              </span>
+              <span className="font-mono text-[11px] text-[#7d7566]">
+                {activeMobileStep + 1} of {PHASES.length}
+              </span>
             </div>
 
-            {/* Phase Card */}
-            <div className="rounded-2xl bg-gradient-to-b from-[#1e1810] to-[#17120a] border border-white/[0.08] p-5 shadow-lg">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-[#ffd426] font-bold">
-                Phase {phase.stepNumber}
-              </span>
-              <h3 className="font-heading text-lg font-bold text-[#f5f3ee] mt-1">
-                {phase.fullTitle}
-              </h3>
-              <p className="text-xs text-[#b7ae9c] mt-2 leading-relaxed">
-                {phase.subtitle}
-              </p>
+            {/* 4 Connected Nodes with Animated Fill Bar */}
+            <div className="relative flex items-center justify-between">
+              {/* Background line */}
+              <div className="absolute left-3 right-3 top-1/2 -translate-y-1/2 h-[2px] bg-white/[0.08]" />
 
-              {/* Mobile Mini-Visual */}
-              <div className="mt-4">
-                {phase.visual}
+              {/* Animated Progress line */}
+              <div
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-[2px] bg-gradient-to-r from-[#ffd426] to-[#ff9f1c] transition-all duration-300 ease-out"
+                style={{
+                  width: `calc(${((activeMobileStep) / (PHASES.length - 1)) * 100}% - 8px)`,
+                }}
+              />
+
+              {PHASES.map((phase, idx) => {
+                const isActive = activeMobileStep === idx;
+                const isPassed = activeMobileStep > idx;
+                return (
+                  <button
+                    key={phase.id}
+                    type="button"
+                    onClick={() => handleMobileStepClick(idx)}
+                    className="relative z-10 flex items-center justify-center w-7 h-7 rounded-full bg-[#120e08] border transition-all duration-300 cursor-pointer"
+                    style={{
+                      borderColor: isActive ? "#ffd426" : isPassed ? "rgba(255,212,38,0.6)" : "rgba(255,255,255,0.15)",
+                      boxShadow: isActive ? "0 0 10px rgba(255,212,38,0.5)" : "none",
+                    }}
+                  >
+                    <span
+                      className={cn(
+                        "font-mono text-[10px] font-bold transition-colors",
+                        isActive ? "text-[#ffd426]" : isPassed ? "text-[#ffd426]/70" : "text-[#7d7566]"
+                      )}
+                    >
+                      {phase.stepNumber}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Dynamic Card for Active Step */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeMobilePhase.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="rounded-2xl bg-gradient-to-b from-[#1e1810] to-[#17120a] border border-white/[0.09] p-4 shadow-2xl relative overflow-hidden"
+            >
+              {/* Subtle Ambient Glow */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-12 -right-12 h-36 w-36 rounded-full bg-[#ffd426]/10 blur-2xl"
+              />
+
+              {/* Phase Full Title */}
+              <div className="flex items-center justify-between gap-2 pb-2 border-b border-white/[0.08]">
+                <h3 className="font-heading text-base font-bold tracking-tight text-[#f5f3ee] line-clamp-1">
+                  {activeMobilePhase.fullTitle}
+                </h3>
+                <span className="font-mono text-[10px] text-[#ffd426] px-2 py-0.5 rounded bg-[#ffd426]/10 border border-[#ffd426]/20 shrink-0">
+                  PHASE {activeMobilePhase.stepNumber} OF 04
+                </span>
               </div>
 
-              {/* Deliverables */}
-              <div className="mt-4 pt-4 border-t border-white/[0.08] space-y-2.5">
-                {phase.deliverables.map((item, idx) => (
+              <p className="mt-1.5 text-xs text-[#b7ae9c] leading-relaxed line-clamp-2">
+                {activeMobilePhase.subtitle}
+              </p>
+
+              {/* SVG Mini-Visual */}
+              <div className="mt-2.5">
+                {activeMobilePhase.visual}
+              </div>
+
+              {/* Target Deliverables */}
+              <div className="mt-2.5 pt-2 border-t border-white/[0.08] space-y-1.5">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[#ffd426] font-semibold block">
+                  Target Deliverables
+                </span>
+                {activeMobilePhase.deliverables.slice(0, 2).map((item, idx) => (
                   <div key={idx} className="flex items-start gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-[#ffd426] shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-xs font-semibold text-[#f5f3ee]">
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-semibold text-[#f5f3ee] truncate">
                         {item.name}
                       </h4>
-                      <p className="text-[11px] text-[#b7ae9c] leading-tight mt-0.5">
+                      <p className="text-[10px] text-[#b7ae9c] leading-tight line-clamp-1">
                         {item.description}
                       </p>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Mobile Scroll Hint */}
+          <div className="flex items-center justify-center gap-1.5 mt-2.5 text-[11px] font-mono text-[#7d7566]">
+            <ArrowRight className="h-3 w-3 text-[#ffd426] rotate-90 animate-bounce" />
+            <span>Scroll down to advance phase ({activeMobileStep + 1}/4)</span>
           </div>
-        ))}
+        </div>
       </div>
     </Section>
   );

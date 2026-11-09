@@ -39,11 +39,11 @@ export function Footer() {
             >
               <div className="relative flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
                 <Image
-                  src="/brand-logo.png"
+                  src="/brand-logo-v3.png"
                   alt="Aethrix Nexus Nova"
                   width={210}
                   height={89}
-                  className="h-11 sm:h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,32,86,0.3)]"
+                  className="h-11 sm:h-12 w-auto object-contain drop-shadow-[0_0_16px_rgba(255,212,38,0.35)]"
                 />
               </div>
             </Link>

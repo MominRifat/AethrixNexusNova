@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Terminal, Sparkles, Loader2, RefreshCw } from "lucide-react";
+import { Terminal, Sparkles, RefreshCw } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ArchitecturePlan, ArchitectureResponse } from "@/lib/architect/types";
 import { generateMockArchitecture } from "@/lib/architect/mockProvider";
 import { ArchitectureOutput } from "./ArchitectureOutput";
@@ -133,7 +134,7 @@ export function TerminalConsole() {
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin text-[#0a0805]" />
+                  <LoadingSpinner size="xs" />
                   <span>Synthesizing...</span>
                 </>
               ) : (

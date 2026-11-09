@@ -172,13 +172,74 @@ section[id] {
   }
 }
 
+/* Obsidian Amber Circular Reactor Keyframes */
+@keyframes spinClockwise {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinCounterClockwise {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes pulseCore {
+  0%, 100% {
+    transform: scale(0.85);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+.animate-spin-clockwise {
+  animation: spinClockwise 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-spin-counter {
+  animation: spinCounterClockwise 3.6s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.animate-pulse-core {
+  animation: pulseCore 1.6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-blob-1,
   .animate-blob-2,
   .animate-float,
   .animate-spin-3d,
   .animate-marquee-left,
-  .animate-marquee-right {
+  .animate-marquee-right,
+  .animate-spin-clockwise,
+  .animate-spin-counter,
+  .animate-pulse-glow,
+  .animate-pulse-core {
     animation: none !important;
   }
 }

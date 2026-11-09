@@ -55,6 +55,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             target="_blank"
             rel="noopener noreferrer"
             className={combinedClassName}
+            {...(props as unknown as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
           >
             {children}
           </a>
@@ -62,7 +63,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       }
 
       return (
-        <Link href={href} className={combinedClassName}>
+        <Link
+          href={href}
+          className={combinedClassName}
+          {...(props as unknown as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
+        >
           {children}
         </Link>
       );

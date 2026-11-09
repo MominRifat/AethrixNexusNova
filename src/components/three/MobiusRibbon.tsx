@@ -31,14 +31,7 @@ function getClientSnapshot(): boolean {
     "(prefers-reduced-motion: reduce)"
   ).matches;
 
-  // 2. Check mobile low-power or small viewport
-  const isSmallScreen = window.innerWidth < 768;
-  const isLowPowerDevice =
-    typeof navigator !== "undefined" &&
-    typeof navigator.hardwareConcurrency === "number" &&
-    navigator.hardwareConcurrency <= 4;
-
-  // 3. Check WebGL availability
+  // 2. Check WebGL availability across both mobile and desktop browsers
   let hasWebGL = false;
   try {
     const canvas = document.createElement("canvas");
@@ -51,7 +44,8 @@ function getClientSnapshot(): boolean {
     hasWebGL = false;
   }
 
-  return prefersReducedMotion || isSmallScreen || isLowPowerDevice || !hasWebGL;
+  // Enable 3D hardware-accelerated scene on mobile phones with WebGL
+  return prefersReducedMotion || !hasWebGL;
 }
 
 function getServerSnapshot(): boolean {

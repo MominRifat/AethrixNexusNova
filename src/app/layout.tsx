@@ -99,9 +99,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icon.png" },
+      { url: "/icon-v3.png" },
       { url: "/icon.svg" },
-      { url: "/favicon.ico" },
+      { url: "/favicon-v3.ico" },
     ],
     apple: "/apple-icon.png",
   },
@@ -117,7 +117,7 @@ export default function RootLayout({
     "@type": "Organization",
     name: SITE_CONFIG.brandName,
     url: "https://aethrixnexus.nova",
-    logo: "https://aethrixnexus.nova/brand-logo.png",
+    logo: "https://aethrixnexus.nova/brand-logo-v3.png",
     description: SITE_CONFIG.tagline,
     contactPoint: {
       "@type": "ContactPoint",
@@ -133,6 +133,9 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} dark`}
     >
       <head>
+        <link rel="icon" href="/icon-v3.png" type="image/png" sizes="256x256" />
+        <link rel="icon" href="/favicon-v3.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

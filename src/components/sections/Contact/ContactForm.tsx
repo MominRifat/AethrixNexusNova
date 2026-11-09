@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import {
   CheckCircle2,
   AlertCircle,
-  Loader2,
   Send,
   Building2,
   Mail,
@@ -13,6 +12,7 @@ import {
   DollarSign,
   RotateCcw,
 } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { BUDGET_BANDS } from "@/lib/estimator-config";
 import { subscribeContactPrefill } from "@/lib/contact-prefill";
 import { cn } from "@/lib/utils";
@@ -79,7 +79,6 @@ export function ContactForm() {
 
     setIsSubmitting(true);
     setServerError(null);
-
     try {
       const res = await fetch("/api/lead", {
         method: "POST",
@@ -370,7 +369,7 @@ export function ContactForm() {
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin text-[#0a0805]" />
+              <LoadingSpinner size="xs" />
               <span>Transmitting Architecture Spec...</span>
             </>
           ) : (

@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { TheMastermindsModal } from "@/components/ui/TheMastermindsModal";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +23,18 @@ export function Navbar() {
   const [isVisible, setIsVisible] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMastermindsOpen, setIsMastermindsOpen] = useState(false);
+  const [navLoadingTarget, setNavLoadingTarget] = useState<string | null>(null);
+  const router = useRouter();
   const lastScrollY = useRef(0);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,10 +46,10 @@ export function Navbar() {
       // Smart auto-hide on scroll down, instant reveal on scroll up
       if (currentScrollY <= 40) {
         setIsVisible(true);
-      } else if (currentScrollY > lastScrollY.current + 6) {
+      } else if (currentScrollY > lastScrollY.current + 16) {
         // Scrolling down -> hide navbar
         setIsVisible(false);
-      } else if (currentScrollY < lastScrollY.current - 6) {
+      } else if (currentScrollY < lastScrollY.current - 16) {
         // Scrolling up -> reveal navbar
         setIsVisible(true);
       }
@@ -70,10 +83,67 @@ export function Navbar() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isMobileOpen, closeMobileMenu]);
 
+  // Single-click deterministic smooth navigation with Obsidian Amber loading transition
+  const handleNavClick = useCallback(
+    (
+      e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>,
+      href: string,
+      label: string
+    ) => {
+      e.preventDefault();
+
+      if (isMobileOpen) {
+        closeMobileMenu();
+      }
+
+      // If on another route (e.g. /design-system), redirect to home with hash
+      if (typeof window !== "undefined" && window.location.pathname !== "/") {
+        router.push(`/${href}`);
+        return;
+      }
+
+      // Trigger high-tech loading transition
+      setNavLoadingTarget(label);
+
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+
+      // Scroll immediately on first click
+      const targetId = href.replace(/^#/, "");
+      const targetElement = document.getElementById(targetId);
+
+      if (targetElement) {
+        if (typeof window !== "undefined" && window.__lenisInstance) {
+          window.__lenisInstance.scrollTo(targetElement, { offset: -80, duration: 1.0 });
+        } else {
+          const top =
+            targetElement.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top, behavior: "smooth" });
+        }
+      }
+
+      // Update URL hash cleanly
+      if (typeof window !== "undefined" && window.history.pushState) {
+        window.history.pushState(null, "", href);
+      }
+
+      // Smoothly dismiss loading overlay
+      loadingTimeoutRef.current = setTimeout(() => {
+        setNavLoadingTarget(null);
+      }, 550);
+    },
+    [isMobileOpen, closeMobileMenu, router]
+  );
+
   const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (window.location.pathname === "/" || window.location.pathname === "") {
       e.preventDefault();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (typeof window !== "undefined" && window.__lenisInstance) {
+        window.__lenisInstance.scrollTo(0, { duration: 1.0 });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
       if (window.location.hash) {
         window.history.pushState(null, "", "/");
       }
@@ -84,29 +154,29 @@ export function Navbar() {
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 w-full transition-[transform,background-color,backdrop-filter,border-color] duration-300 ease-in-out",
+          "fixed top-0 left-0 right-0 z-50 w-full max-w-[100vw] overflow-hidden transition-[transform,background-color,backdrop-filter,border-color] duration-300 ease-in-out",
           isVisible ? "translate-y-0" : "-translate-y-full",
           isScrolled
             ? "bg-[#0a0805]/80 backdrop-blur-[14px] border-b border-white/[0.07] py-3.5"
             : "bg-transparent border-b border-transparent py-5"
         )}
       >
-        <div className="site-container flex items-center justify-between">
+        <div className="site-container flex items-center justify-between w-full max-w-full sm:max-w-[1240px]">
           {/* Combined Brand Logo & Wordmark */}
           <Link
             href="/"
             onClick={handleLogoClick}
-            className="flex items-center group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffd426] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0805] rounded-md"
+            className="flex items-center shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffd426] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0805] rounded-md"
             aria-label="Aethrix Nexus Nova - Home"
           >
-            <div className="relative flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+            <div className="relative flex items-center justify-center transition-transform duration-200 group-hover:scale-105 shrink-0">
               <Image
-                src="/brand-logo.png"
+                src="/brand-logo-v3.png"
                 alt="Aethrix Nexus Nova"
                 width={180}
                 height={76}
                 priority
-                className="h-10 sm:h-11 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,32,86,0.3)]"
+                className="h-10 sm:h-11 w-auto object-contain shrink-0 drop-shadow-[0_0_16px_rgba(255,212,38,0.35)]"
               />
             </div>
           </Link>
@@ -120,7 +190,8 @@ export function Navbar() {
               <a
                 key={link.label}
                 href={link.href}
-                className="relative text-sm font-medium text-[#b7ae9c] hover:text-[#f5f3ee] transition-colors py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffd426] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0805] rounded group"
+                onClick={(e) => handleNavClick(e, link.href, link.label)}
+                className="relative text-sm font-medium text-[#b7ae9c] hover:text-[#f5f3ee] transition-colors py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffd426] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0805] rounded group cursor-pointer"
               >
                 <span>{link.label}</span>
                 <span
@@ -145,7 +216,12 @@ export function Navbar() {
               <span>The Masterminds</span>
             </button>
 
-            <Button variant="primary" size="sm" href="#contact">
+            <Button
+              variant="primary"
+              size="sm"
+              href="#contact"
+              onClick={(e) => handleNavClick(e, "#contact", "Contact")}
+            >
               Start a Project
             </Button>
           </div>
@@ -154,7 +230,7 @@ export function Navbar() {
           <button
             type="button"
             onClick={isMobileOpen ? closeMobileMenu : openMobileMenu}
-            className="flex md:hidden items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg border border-white/[0.1] bg-[#17120a] text-[#f5f3ee] hover:text-[#ffd426] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffd426]"
+            className="flex md:hidden items-center justify-center shrink-0 w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg border border-white/[0.1] bg-[#17120a] text-[#f5f3ee] hover:text-[#ffd426] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffd426]"
             aria-expanded={isMobileOpen}
             aria-label="Toggle mobile menu"
           >
@@ -162,6 +238,31 @@ export function Navbar() {
           </button>
         </div>
       </header>
+
+      {/* Navigation Loading Transition HUD Overlay */}
+      {navLoadingTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0805]/75 backdrop-blur-md pointer-events-none select-none animate-in fade-in duration-200"
+          role="status"
+          aria-live="polite"
+        >
+          {/* Top Laser Scanning Bar */}
+          <div className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-[#ffd426] to-[#ff9f1c] shadow-[0_0_16px_#ffd426] animate-pulse" />
+
+          {/* Center High-Tech Telemetry HUD */}
+          <div className="p-6 sm:p-7 rounded-3xl bg-[#140f09]/95 border border-[#ffd426]/30 shadow-[0_0_40px_rgba(255,212,38,0.25)] flex flex-col items-center gap-3.5 text-center max-w-sm mx-4 animate-in zoom-in-95 duration-200">
+            <LoadingSpinner size="md" />
+            <div className="space-y-1">
+              <h4 className="font-heading font-bold text-sm sm:text-base text-[#f5f3ee] tracking-wide uppercase">
+                Routing to {navLoadingTarget}
+              </h4>
+              <p className="font-mono text-[11px] text-[#ffd426] tracking-widest uppercase">
+                Aethrix Neural Transit // Synchronized
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Full-Screen Overlay Menu */}
       {isMobileOpen && (
@@ -176,7 +277,7 @@ export function Navbar() {
               <a
                 key={link.label}
                 href={link.href}
-                onClick={closeMobileMenu}
+                onClick={(e) => handleNavClick(e, link.href, link.label)}
                 style={{
                   animationDelay: `${idx * 60}ms`,
                 }}
@@ -207,7 +308,7 @@ export function Navbar() {
               variant="primary"
               size="lg"
               href="#contact"
-              onClick={closeMobileMenu}
+              onClick={(e) => handleNavClick(e, "#contact", "Contact")}
               className="w-full justify-center"
             >
               Start a Project

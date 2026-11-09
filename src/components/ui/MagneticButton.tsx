@@ -2,15 +2,19 @@
 
 import React, { useRef, useState } from "react";
 import { Button, ButtonProps } from "./Button";
+import { cn } from "@/lib/utils";
 
 export interface MagneticButtonProps extends ButtonProps {
   maxShift?: number;
+  wrapperClassName?: string;
 }
 
 export function MagneticButton({
   maxShift = 6,
   children,
   style,
+  className,
+  wrapperClassName,
   ...props
 }: MagneticButtonProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,6 +45,8 @@ export function MagneticButton({
     setPosition({ x: 0, y: 0 });
   };
 
+  const isFullWidth = className?.includes("w-full");
+
   return (
     <div
       ref={containerRef}
@@ -54,9 +60,13 @@ export function MagneticButton({
             : "transform 0.1s ease-out",
         willChange: "transform",
       }}
-      className="inline-block"
+      className={cn(
+        "inline-block",
+        isFullWidth && "w-full sm:w-auto",
+        wrapperClassName
+      )}
     >
-      <Button {...props} style={style}>
+      <Button className={className} style={style} {...props}>
         {children}
       </Button>
     </div>

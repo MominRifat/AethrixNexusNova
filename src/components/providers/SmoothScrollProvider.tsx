@@ -3,6 +3,26 @@
 import { useEffect } from "react";
 import Lenis from "lenis";
 
+// Silence known Three.js r183+ Clock deprecation warning caused by @react-three/fiber's default clock store
+if (typeof window !== "undefined") {
+  const origWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    if (
+      typeof args[0] === "string" &&
+      args[0].includes("THREE.Clock: This module has been deprecated")
+    ) {
+      return;
+    }
+    origWarn.apply(console, args);
+  };
+}
+
+declare global {
+  interface Window {
+    __lenisInstance?: Lenis;
+  }
+}
+
 interface SmoothScrollProviderProps {
   children: React.ReactNode;
 }
@@ -24,7 +44,10 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
       orientation: "vertical",
       gestureOrientation: "vertical",
       smoothWheel: true,
+      anchors: true,
     });
+
+    window.__lenisInstance = lenis;
 
     let animationFrameId: number;
 
@@ -38,6 +61,7 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
     return () => {
       cancelAnimationFrame(animationFrameId);
       lenis.destroy();
+      window.__lenisInstance = undefined;
     };
   }, []);
 

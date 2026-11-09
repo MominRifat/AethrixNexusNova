@@ -5,6 +5,20 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
 import * as THREE from "three";
 
+// Silence known Three.js r183+ Clock deprecation warning emitted by @react-three/fiber's internal store
+if (typeof window !== "undefined") {
+  const origWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    if (
+      typeof args[0] === "string" &&
+      args[0].includes("THREE.Clock: This module has been deprecated")
+    ) {
+      return;
+    }
+    origWarn.apply(console, args);
+  };
+}
+
 // Deterministic pseudo-random helper for pure idempotent rendering
 function pseudoRandom(seed: number): number {
   const x = Math.sin(seed * 9999.123) * 10000;
