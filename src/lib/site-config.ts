@@ -2,17 +2,16 @@
  * Site Configuration & Enterprise Metadata
  *
  * All contact details, commitments, and calendar booking links are configurable here.
- * Placeholders are clearly labeled per HONESTY rule in PROJECT_RULES.md.
  */
 
 export const SITE_CONFIG = {
   brandName: "Aethrix Nexus Nova",
   tagline: "Engineering Intelligent Realities for the Enterprise Era",
   
-  // Contact Placeholders (replace with verified firm credentials)
-  contactEmail: "consult@aethrixnexus.nova",
+  // Contact & Delivery Coordinates
+  contactEmail: "mominrifat8@gmail.com",
   contactPhone: "+1 (888) 492-NOVA",
-  officeLocation: "Global Delivery // Engineering Hubs: San Francisco, Zurich, Singapore",
+  officeLocation: "Dhanmondi, Dhaka",
 
   // Enterprise Commitments
   commitments: [

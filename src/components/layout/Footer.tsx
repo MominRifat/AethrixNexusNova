@@ -141,18 +141,19 @@ export function Footer() {
                 <span className="block text-xs font-mono uppercase text-[#7d7566]">
                   Client Consultation
                 </span>
-                <span className="text-[#f5f3ee] font-mono text-xs">
-                  {/* Placeholder contact email */}
-                  consult@aethrixnexus.dev
-                </span>
+                <a
+                  href="mailto:mominrifat8@gmail.com"
+                  className="text-[#f5f3ee] font-mono text-xs hover:text-[#ffd426] transition-colors"
+                >
+                  mominrifat8@gmail.com
+                </a>
               </div>
               <div>
                 <span className="block text-xs font-mono uppercase text-[#7d7566]">
                   Global Presence
                 </span>
                 <span className="text-[#f5f3ee] text-xs">
-                  {/* Placeholder global nodes */}
-                  San Francisco, CA &middot; Dhaka Node
+                  Dhanmondi, Dhaka
                 </span>
               </div>
               <div>
