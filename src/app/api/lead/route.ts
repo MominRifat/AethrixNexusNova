@@ -37,7 +37,8 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
-function buildObsidianAmberEmailHtml(data: {
+// 1. Admin Lead Alert HTML Template
+function buildAdminNotificationEmailHtml(data: {
   name: string;
   email: string;
   company: string;
@@ -45,6 +46,7 @@ function buildObsidianAmberEmailHtml(data: {
   budget: string;
   ip: string;
   timestamp: string;
+  ticketId: string;
 }) {
   return `
 <!DOCTYPE html>
@@ -58,7 +60,6 @@ function buildObsidianAmberEmailHtml(data: {
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #0a0805; margin: 0 auto; padding: 0;">
     <tr>
       <td align="center">
-        <!-- Main Email Container -->
         <table role="presentation" width="100%" style="max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #18130b 0%, #100c07 100%); border: 1px solid rgba(255, 212, 38, 0.25); border-radius: 16px; overflow: hidden; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);" cellspacing="0" cellpadding="0">
           
           <!-- Top Accent Gold Line -->
@@ -71,12 +72,12 @@ function buildObsidianAmberEmailHtml(data: {
             <td align="center" style="padding: 32px 24px 20px 24px; text-align: center;">
               <img src="cid:brand_logo" alt="Aethrix Nexus Nova" width="220" style="display: block; width: 220px; max-width: 90%; height: auto; margin: 0 auto 16px auto;" />
               <div style="display: inline-block; padding: 4px 12px; background-color: rgba(255, 212, 38, 0.1); border: 1px solid rgba(255, 212, 38, 0.3); border-radius: 9999px; font-family: monospace; font-size: 11px; font-weight: 700; color: #ffd426; text-transform: uppercase; letter-spacing: 0.1em;">
-                Production Node // Lead Dispatch
+                Production Node // Lead Dispatch &bull; Ref: ${data.ticketId}
               </div>
             </td>
           </tr>
 
-          <!-- Main Title & Lead Summary Banner -->
+          <!-- Main Title -->
           <tr>
             <td style="padding: 0 32px 24px 32px;">
               <h1 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 700; color: #f5f3ee; letter-spacing: -0.02em; text-align: center;">
@@ -88,14 +89,13 @@ function buildObsidianAmberEmailHtml(data: {
             </td>
           </tr>
 
-          <!-- Divider -->
           <tr>
             <td style="padding: 0 32px;">
               <div style="height: 1px; background-color: rgba(255, 255, 255, 0.08);"></div>
             </td>
           </tr>
 
-          <!-- Lead Details Key-Value Grid -->
+          <!-- Lead Details Table -->
           <tr>
             <td style="padding: 24px 32px;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
@@ -143,7 +143,7 @@ function buildObsidianAmberEmailHtml(data: {
             </td>
           </tr>
 
-          <!-- Scope Details Box -->
+          <!-- Scope Box -->
           <tr>
             <td style="padding: 0 32px 28px 32px;">
               <div style="font-family: monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #ffd426; margin-bottom: 8px; font-weight: 600;">
@@ -153,12 +153,123 @@ function buildObsidianAmberEmailHtml(data: {
             </td>
           </tr>
 
-          <!-- Call To Action Button -->
+          <!-- Action Button -->
           <tr>
             <td align="center" style="padding: 0 32px 32px 32px;">
-              <a href="mailto:${data.email}?subject=Re:%20Aethrix%20Nexus%20Nova%20Architecture%20Inquiry" style="display: inline-block; background-color: #ffd426; color: #1a1305; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 16px rgba(255, 212, 38, 0.35); text-transform: uppercase; font-family: monospace; letter-spacing: 0.05em;">
+              <a href="mailto:${data.email}?subject=Re:%20Aethrix%20Nexus%20Nova%20Architecture%20Inquiry%20[Ref:%20${data.ticketId}]" style="display: inline-block; background-color: #ffd426; color: #1a1305; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 16px rgba(255, 212, 38, 0.35); text-transform: uppercase; font-family: monospace; letter-spacing: 0.05em;">
                 Reply Directly to ${data.name} &rarr;
               </a>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #0c0906; border-top: 1px solid rgba(255, 255, 255, 0.06); padding: 20px 32px; text-align: center;">
+              <p style="margin: 0 0 4px 0; font-size: 11px; font-family: monospace; color: #ffd426;">
+                AETHRIX NEXUS NOVA &bull; ENTERPRISE IT PROTOCOL
+              </p>
+              <p style="margin: 0; font-size: 11px; color: #7d7566;">
+                Global Presence: Dhanmondi, Dhaka &bull; Inquiries: mominrifat8@gmail.com
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+}
+
+// 2. Client Auto-Reply Confirmation Email HTML Template
+function buildClientConfirmationEmailHtml(data: {
+  name: string;
+  company: string;
+  scope: string;
+  budget: string;
+  ticketId: string;
+}) {
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consultation Inquiry Acknowledged // Aethrix Nexus Nova</title>
+</head>
+<body style="margin: 0; padding: 24px 0; background-color: #0a0805; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #f5f3ee;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #0a0805; margin: 0 auto; padding: 0;">
+    <tr>
+      <td align="center">
+        <!-- Main Container -->
+        <table role="presentation" width="100%" style="max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #18130b 0%, #100c07 100%); border: 1px solid rgba(255, 212, 38, 0.25); border-radius: 16px; overflow: hidden; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);" cellspacing="0" cellpadding="0">
+          
+          <!-- Top Accent Gold Line -->
+          <tr>
+            <td style="height: 3px; background: linear-gradient(90deg, #ffd426, #ff9f1c, #ffd426);"></td>
+          </tr>
+
+          <!-- Header with Brand Logo -->
+          <tr>
+            <td align="center" style="padding: 32px 24px 20px 24px; text-align: center;">
+              <img src="cid:brand_logo" alt="Aethrix Nexus Nova" width="220" style="display: block; width: 220px; max-width: 90%; height: auto; margin: 0 auto 16px auto;" />
+              <div style="display: inline-block; padding: 4px 14px; background-color: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 9999px; font-family: monospace; font-size: 11px; font-weight: 700; color: #34d399; text-transform: uppercase; letter-spacing: 0.1em;">
+                Inquiry Confirmed // Ticket: ${data.ticketId}
+              </div>
+            </td>
+          </tr>
+
+          <!-- Greeting & Confirmation -->
+          <tr>
+            <td style="padding: 0 32px 20px 32px;">
+              <h1 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 700; color: #f5f3ee; letter-spacing: -0.02em;">
+                Consultation Request Received, ${data.name}.
+              </h1>
+              <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6; color: #b7ae9c;">
+                Thank you for initiating contact with <strong style="color: #ffd426;">Aethrix Nexus Nova</strong>. We have successfully logged your technical brief for <strong style="color: #f5f3ee;">${data.company}</strong>.
+              </p>
+              <p style="margin: 0; font-size: 13.5px; line-height: 1.6; color: #b7ae9c;">
+                Our Principal Solution Architects are reviewing your concurrency limits, data invariants, and infrastructure targets.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Guaranteed SLA Callout Box -->
+          <tr>
+            <td style="padding: 0 32px 24px 32px;">
+              <div style="background-color: rgba(255, 212, 38, 0.05); border: 1px solid rgba(255, 212, 38, 0.2); border-radius: 10px; padding: 14px 18px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                  <tr>
+                    <td style="vertical-align: top; width: 24px; font-size: 16px; color: #ffd426;">&#10003;</td>
+                    <td style="font-size: 13px; line-height: 1.5; color: #f5f3ee;">
+                      <strong style="color: #ffd426;">Guaranteed 24-Hour SLA Response:</strong> A senior architect will reach out directly to coordinate discovery blueprinting, mutual NDA execution, and technical milestone planning.
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Submitted Specification Summary -->
+          <tr>
+            <td style="padding: 0 32px 24px 32px;">
+              <div style="font-family: monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #ffd426; margin-bottom: 8px; font-weight: 600;">
+                Summary of Submitted Brief
+              </div>
+              <div style="background-color: #0e0b07; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 14px 16px; font-size: 13px; color: #f5f3ee; line-height: 1.5;">
+                <div style="margin-bottom: 6px;"><span style="color: #7d7566; font-family: monospace;">TARGET ENTITY:</span> ${data.company}</div>
+                <div style="margin-bottom: 6px;"><span style="color: #7d7566; font-family: monospace;">BUDGET TIER:</span> <span style="color: #ffd426; font-weight: 600;">${data.budget}</span></div>
+                <div><span style="color: #7d7566; font-family: monospace;">SCOPE BRIEF:</span> <span style="color: #b7ae9c;">${data.scope}</span></div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Direct Communication Hint -->
+          <tr>
+            <td style="padding: 0 32px 28px 32px; font-size: 12.5px; line-height: 1.6; color: #7d7566;">
+              Need to append supplementary architecture diagrams, OpenAPI specifications, or mutual NDA drafts prior to our briefing? Simply reply directly to this email or reach us at <a href="mailto:mominrifat8@gmail.com" style="color: #ffd426; text-decoration: none;">mominrifat8@gmail.com</a>.
             </td>
           </tr>
 
@@ -169,7 +280,7 @@ function buildObsidianAmberEmailHtml(data: {
                 AETHRIX NEXUS NOVA &bull; ENTERPRISE IT PROTOCOL
               </p>
               <p style="margin: 0; font-size: 11px; color: #7d7566;">
-                Global Presence: Dhanmondi, Dhaka &bull; Inquiries: mominrifat8@gmail.com
+                Global Presence: Dhanmondi, Dhaka &bull; Direct: mominrifat8@gmail.com
               </p>
             </td>
           </tr>
@@ -217,8 +328,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, message: "Lead captured successfully" });
     }
 
+    const ticketId = `ANN-${Date.now().toString(36).toUpperCase()}`;
+
     const leadPayload = {
       timestamp: new Date().toISOString(),
+      ticketId,
       name,
       email,
       company,
@@ -227,14 +341,14 @@ export async function POST(req: NextRequest) {
       ipAddress: ip,
     };
 
-    // 4. Send Email via Gmail SMTP (Primary)
+    // 4. Send Email via Gmail SMTP
     const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || "mominrifat8@gmail.com";
     const smtpUser = process.env.EMAIL_HOST_USER || "mominrifat8@gmail.com";
     const smtpPass = process.env.EMAIL_HOST_PASSWORD || "brgrrqybbnjolahl";
     const smtpHost = process.env.EMAIL_HOST || "smtp.gmail.com";
     const smtpPort = Number(process.env.EMAIL_PORT) || 587;
 
-    const htmlContent = buildObsidianAmberEmailHtml({
+    const adminHtml = buildAdminNotificationEmailHtml({
       name,
       email,
       company,
@@ -242,6 +356,15 @@ export async function POST(req: NextRequest) {
       budget: leadPayload.budget,
       ip,
       timestamp: leadPayload.timestamp,
+      ticketId,
+    });
+
+    const clientHtml = buildClientConfirmationEmailHtml({
+      name,
+      company,
+      scope,
+      budget: leadPayload.budget,
+      ticketId,
     });
 
     let emailSent = false;
@@ -261,7 +384,7 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // Check for inline brand logo in public folder
+        // Inline brand logo attachment
         const logoPath = path.join(process.cwd(), "public", "brand-logo-v3.png");
         const attachments = [];
 
@@ -273,15 +396,29 @@ export async function POST(req: NextRequest) {
           });
         }
 
+        // A. Send Lead Notification to Admin (Momin Rifat)
         await transporter.sendMail({
           from: `"Aethrix Nexus Nova" <${smtpUser}>`,
           to: adminEmail,
           replyTo: `"${name}" <${email}>`,
-          subject: `[Lead Notification] ${name} from ${company} - Target: ${leadPayload.budget}`,
-          text: `New Lead:\nName: ${name}\nEmail: ${email}\nCompany: ${company}\nBudget: ${leadPayload.budget}\nScope:\n${scope}\nReceived: ${leadPayload.timestamp}\nIP: ${ip}`,
-          html: htmlContent,
+          subject: `[Lead Notification] ${name} from ${company} - Ref: ${ticketId}`,
+          text: `New Lead:\nName: ${name}\nEmail: ${email}\nCompany: ${company}\nBudget: ${leadPayload.budget}\nScope:\n${scope}\nReceived: ${leadPayload.timestamp}\nIP: ${ip}\nRef: ${ticketId}`,
+          html: adminHtml,
           attachments,
         });
+
+        // B. Send Instant Confirmation Receipt to Client
+        if (email && email.includes("@")) {
+          await transporter.sendMail({
+            from: `"Aethrix Nexus Nova" <${smtpUser}>`,
+            to: email,
+            replyTo: adminEmail,
+            subject: `Consultation Received // Aethrix Nexus Nova [Ref: ${ticketId}]`,
+            text: `Dear ${name},\n\nThank you for reaching out to Aethrix Nexus Nova. We have received your technical brief for ${company}.\n\nGuaranteed 24-Hour SLA: Our senior solution architects are reviewing your specifications and will reach out within 24 hours.\n\nTicket Reference: ${ticketId}\nBudget: ${leadPayload.budget}\nScope: ${scope}\n\nCoordinates: Dhanmondi, Dhaka | Direct: mominrifat8@gmail.com`,
+            html: clientHtml,
+            attachments,
+          });
+        }
 
         emailSent = true;
       } catch (err) {
@@ -301,8 +438,8 @@ export async function POST(req: NextRequest) {
           body: JSON.stringify({
             from: "Aethrix Nexus Nova <onboarding@resend.dev>",
             to: adminEmail,
-            subject: `[Lead Notification] ${name} (${company})`,
-            html: htmlContent,
+            subject: `[Lead Notification] ${name} (${company}) [Ref: ${ticketId}]`,
+            html: adminHtml,
           }),
         });
         emailSent = true;
@@ -335,7 +472,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Consultation inquiry received. Our principal architects will reach out within 24 hours.",
+      ticketId,
+      message: "Consultation inquiry received. A confirmation receipt has been dispatched to your email.",
     });
   } catch (error) {
     console.error("Lead API Route Exception:", error);
