@@ -69,7 +69,7 @@ export function TechRadar() {
     setCanScrollLeft(scrollLeft > 12);
     setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 12);
 
-    const cardStep = 280;
+    const cardStep = Math.max(clientWidth * 0.8, 260);
     const index = Math.round(scrollLeft / cardStep);
     setActiveSlideIndex(Math.min(filteredItems.length - 1, Math.max(0, index)));
   };

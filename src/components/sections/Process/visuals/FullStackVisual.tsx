@@ -4,7 +4,7 @@ import React from "react";
 
 export function FullStackVisual() {
   return (
-    <div className="relative w-full h-36 sm:h-38 rounded-xl bg-[#0e0b07] border border-white/[0.08] p-3 flex flex-col justify-between overflow-hidden select-none">
+    <div className="relative w-full h-28 sm:h-32 rounded-xl bg-[#0e0b07] border border-white/[0.08] p-2.5 sm:p-3 flex flex-col justify-between overflow-hidden select-none">
       {/* Top Telemetry Header */}
       <div className="relative z-10 flex items-center justify-between text-[11px] font-mono">
         <div className="flex items-center gap-1.5 text-[#ffd426]">
