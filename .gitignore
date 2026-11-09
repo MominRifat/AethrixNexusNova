@@ -42,6 +42,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local leads output
-leads.ndjson
-
+# local leads database (tracked for collaboration)
+!leads.ndjson
