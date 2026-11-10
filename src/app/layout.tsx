@@ -33,7 +33,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://aethrixnexus.nova"),
+  metadataBase: new URL("https://aethrixnexusnova.vercel.app"),
   title: {
     default: "Aethrix Nexus Nova | Enterprise AI, 3D Web & Resilient Architecture",
     template: "%s | Aethrix Nexus Nova",
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://aethrixnexus.nova",
+    url: "https://aethrixnexusnova.vercel.app",
     siteName: "Aethrix Nexus Nova",
     title: "Aethrix Nexus Nova | Enterprise IT & AI Architecture",
     description:
@@ -119,8 +119,8 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "Organization",
     name: SITE_CONFIG.brandName,
-    url: "https://aethrixnexus.nova",
-    logo: "https://aethrixnexus.nova/brand-logo-v3.png",
+    url: "https://aethrixnexusnova.vercel.app",
+    logo: "https://aethrixnexusnova.vercel.app/brand-logo-v3.png",
     description: SITE_CONFIG.tagline,
     contactPoint: {
       "@type": "ContactPoint",

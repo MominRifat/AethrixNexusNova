@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = "https://aethrixnexus.nova";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aethrixnexusnova.vercel.app";
 
   return {
     rules: [
