@@ -105,6 +105,9 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
+  verification: {
+    google: "5BpQIi6ny1LrY051hPFSuJDeb7onsiU46NZjqGoYSyA",
+  },
 };
 
 export default function RootLayout({
@@ -133,6 +136,7 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} dark`}
     >
       <head>
+        <meta name="google-site-verification" content="5BpQIi6ny1LrY051hPFSuJDeb7onsiU46NZjqGoYSyA" />
         <link rel="icon" href="/icon-v3.png" type="image/png" sizes="256x256" />
         <link rel="icon" href="/favicon-v3.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
